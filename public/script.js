@@ -34,75 +34,78 @@ function elt(type, attrs, ...children) {
 
 const showBoard = () => {
   state.app.innerHTML = "";
-  const fields = state.board.map((row, rowIdx) =>
-    row.map((col, colIdx) => {
-      let content = "";
-      if (col === "b") {
-        content = elt("div", { class: "disc disc-blue" });
-      } else if (col === "r") {
-        content = elt("div", { class: "disc disc-red" });
-      }
 
-      const element = elt(
+  const boardStructure = ["div", { class: "board" }];
+  state.board.forEach((row, rowIdx) =>
+    row.forEach((col, colIdx) => {
+      const field = [
         "div",
         { class: "field", id: `field-${rowIdx}-${colIdx}` },
-        content,
-      );
+      ];
+      if (col === "b") {
+        field.push(["div", { class: "disc disc-blue" }]);
+      } else if (col === "r") {
+        field.push(["div", { class: "disc disc-red" }]);
+      }
 
-      element.addEventListener("click", () => dropDisc(colIdx));
-      return element;
+      boardStructure.push(field);
     }),
   );
+  const boardElement = renderSJDON(boardStructure, state.app);
+  state.board.forEach((row, rowIdx) => {
+    row.forEach((_, colIdx) => {
+      const el = boardElement.querySelector(`#field-${rowIdx}-${colIdx}`);
+      el.addEventListener("click", () => dropDisc(colIdx));
+    });
+  });
 
-  const board = elt("div", { class: "board" }, ...fields.flat());
-  state.app.appendChild(board);
-
-  const resetButton = elt("button", { id: "reset-button" }, "Reset Game");
-  resetButton.addEventListener("click", () => {
+  const containerEl = renderSJDON(["div", { id: "button-container" }, ""], state.app);
+  const resetButtonEl = renderSJDON(
+    ["button", { id: "reset-button" }, "Reset Game"],
+    containerEl,
+  );
+  resetButtonEl.addEventListener("click", () => {
     state = init();
     showBoard();
   });
 
-  const buttonContainer = elt(
-    "div",
-    { id: "button-container" },
-    ""
-  );
-  state.app.appendChild(buttonContainer);
-
   isServerReachable()
     .then(() => {
-      saveButton = elt("button", { id: "save-button" }, "Save to Server");
-      saveButton.addEventListener("click", () => saveGame());
+      const saveBtn = renderSJDON(
+        ["button", { id: "save-button" }, "Save to Server"],
+        containerEl,
+      );
+      saveBtn.addEventListener("click", () => saveGame());
 
-      loadButton = elt("button", { id: "load-button" }, "Load from Server");
-      loadButton.addEventListener("click", () => loadGame());
+      const loadBtn = renderSJDON(
+        ["button", { id: "load-button" }, "Load from Server"],
+        containerEl,
+      );
+      loadBtn.addEventListener("click", () => loadGame());
     })
     .catch(() => {
-      saveButton = elt("button", { id: "save-button" }, "Save to LocalStorage");
-      saveButton.addEventListener("click", () => {
-        localStorage.setItem("c4game", JSON.stringify(state));
-        alert("Game saved to LocalStorage!");
-      });
-      loadButton = elt(
-        "button",
-        { id: "load-button" },
-        "Load from LocalStorage",
+      const saveBtn = renderSJDON(
+        ["button", { id: "save-button" }, "Save to LocalStorage"],
+        containerEl,
       );
-      loadButton.addEventListener("click", () => {
-        const savedState = localStorage.getItem("c4game");
-        if (savedState) {
-          state = JSON.parse(savedState);
+      saveBtn.addEventListener("click", () => {
+        localStorage.setItem("c4game", JSON.stringify(state));
+        alert("Saved locally!");
+      });
+
+      const loadBtn = renderSJDON(
+        ["button", { id: "load-button" }, "Load from LocalStorage"],
+        containerEl,
+      );
+      loadBtn.addEventListener("click", () => {
+        const saved = localStorage.getItem("c4game");
+        if (saved) {
+          state = JSON.parse(saved);
           state.app = document.getElementById("app");
           showBoard();
         }
       });
     })
-    .finally(() => {
-      buttonContainer.appendChild(resetButton);
-      buttonContainer.appendChild(saveButton);
-      buttonContainer.appendChild(loadButton);
-    });
 };
 
 const saveGame = () => {
