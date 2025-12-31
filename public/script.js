@@ -1,10 +1,14 @@
+/**
+ * Initializes the game state.
+ * @returns {Object} The initial game state.
+ */
 const init = () => ({
   app: document.getElementById("app"),
   board: Array(6)
     .fill(null)
     .map((_) => Array(7).fill("")),
   current: "r",
-  moves: []
+  moves: [],
 });
 
 let state = init();
@@ -21,18 +25,10 @@ const getField = (row, col) => {
   return state.board[row][col];
 };
 
-function elt(type, attrs, ...children) {
-  let node = document.createElement(type);
-  Object.keys(attrs).forEach((key) => {
-    node.setAttribute(key, attrs[key]);
-  });
-  for (let child of children) {
-    if (typeof child != "string") node.appendChild(child);
-    else node.appendChild(document.createTextNode(child));
-  }
-  return node;
-}
-
+/**
+ * Builds the JSDON DOM, attaches to the app root, and sets up event listeners.
+ * Also sets up save/load buttons depending on server reachability.
+ */
 const showBoard = () => {
   state.app.innerHTML = "";
 
@@ -103,6 +99,9 @@ const showBoard = () => {
     });
 };
 
+/**
+ * Saves the current game state to the server.
+ */
 const saveGame = () => {
   fetch("/api/data/save?api-key=c4game", {
     method: "PUT",
@@ -126,6 +125,9 @@ const saveGame = () => {
     });
 };
 
+/**
+ * Loads the game state from the server.
+ */
 const loadGame = () => {
   fetch("/api/data/load")
     .then((response) => {
@@ -141,6 +143,11 @@ const loadGame = () => {
     });
 };
 
+/**
+ * Attempts to drop a disc into the specified column. Triggers a re-render
+ * and win check if successful.
+ * @param {number} colIdx - The index of the column to drop the disc into.
+ */
 const dropDisc = (colIdx) => {
   for (let rowIdx = state.board.length - 1; rowIdx >= 0; rowIdx--) {
     if (getField(rowIdx, colIdx) === "") {
@@ -163,6 +170,10 @@ const dropDisc = (colIdx) => {
   }
 };
 
+/**
+ * Checks if the server is reachable by sending a HEAD request to /api/ping.
+ * @returns {Promise<boolean>} Resolves to true if the server is reachable, otherwise throws an error.
+ */
 async function isServerReachable() {
   try {
     const response = await fetch("/api/ping", {
@@ -177,13 +188,16 @@ async function isServerReachable() {
   }
 }
 
+/**
+ * Undoes the last move made by a player.
+ */
 const undo = () => {
   if (state.moves.length === 0) {
     alert("No moves to undo!");
-    return
+    return;
   }
   const lastMove = state.moves.pop();
   state.board[lastMove.row][lastMove.col] = "";
   state.current = state.current === "r" ? "b" : "r";
   showBoard();
-}
+};

@@ -1,3 +1,9 @@
+/**
+ * Determines if the given player has won in a Connect 4 game.
+ * @param {string} p - The player to check for a win ("r" or "b").
+ * @param {Array<Array<string>>} board - The game board represented as a 2D array.
+ * @returns {boolean} True if the player has won, false otherwise.
+ */
 function connect4Winner(p, board) {
   for (let row = 0; row < board.length; row++) {
     for (let col = 0; col < board[row].length; col++) {
@@ -53,4 +59,3 @@ function connect4Winner(p, board) {
 
   return false;
 }
-
