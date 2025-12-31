@@ -1,9 +1,12 @@
-const state = {
+const init = () => ({
+  app: document.getElementById("app"),
   board: Array(6)
     .fill(null)
     .map((_) => Array(7).fill("")),
-  app: document.getElementById("app"),
-};
+  current: "r",
+});
+
+let state = init();
 
 /**
  * Helper to get the value of a specific field on the board.
@@ -40,32 +43,37 @@ const showBoard = () => {
         content = elt("div", { class: "disc disc-red" });
       }
 
-      return elt(
+      const element = elt(
         "div",
         { class: "field", id: `field-${rowIdx}-${colIdx}` },
         content,
       );
+
+      element.addEventListener("click", () => dropDisc(colIdx));
+      return element;
     }),
   );
 
   const board = elt("div", { class: "board" }, ...fields.flat());
   state.app.appendChild(board);
+
+  const resetButton = elt("button", { id: "reset-button" }, "Reset Game");
+  resetButton.addEventListener("click", () => {
+    state = init()
+    showBoard();
+  });
+
+  const buttonContainer = elt("div", { class: "button-container" }, resetButton);
+  state.app.appendChild(buttonContainer);
 };
 
-const fillRandom = () => {
-  const cols = state.board[0].length;
-  const rows = state.board.length;
-
-  const randomCol = Math.floor(Math.random() * cols);
-  const randomRow = Math.floor(Math.random() * rows);
-
-  const colors = ["r", "b", ""];
-  const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
-  state.board[randomRow][randomCol] = randomColor;
+const dropDisc = (colIdx) => {
+  for (let rowIdx = state.board.length - 1; rowIdx >= 0; rowIdx--) {
+    if (getField(rowIdx, colIdx) === "") {
+      state.board[rowIdx][colIdx] = state.current;
+      state.current = state.current === "r" ? "b" : "r";
+      showBoard();
+      return;
+    }
+  }
 };
-
-setInterval(() => {
-  fillRandom();
-  showBoard();
-}, 1000);
