@@ -4,6 +4,7 @@ const init = () => ({
     .fill(null)
     .map((_) => Array(7).fill("")),
   current: "r",
+  moves: []
 });
 
 let state = init();
@@ -35,31 +36,19 @@ function elt(type, attrs, ...children) {
 const showBoard = () => {
   state.app.innerHTML = "";
 
-  const boardStructure = ["div", { class: "board" }];
-  state.board.forEach((row, rowIdx) =>
-    row.forEach((col, colIdx) => {
-      const field = [
-        "div",
-        { class: "field", id: `field-${rowIdx}-${colIdx}` },
-      ];
-      if (col === "b") {
-        field.push(["div", { class: "disc disc-blue" }]);
-      } else if (col === "r") {
-        field.push(["div", { class: "disc disc-red" }]);
-      }
-
-      boardStructure.push(field);
-    }),
-  );
-  const boardElement = renderSJDON(boardStructure, state.app);
-  state.board.forEach((row, rowIdx) => {
-    row.forEach((_, colIdx) => {
-      const el = boardElement.querySelector(`#field-${rowIdx}-${colIdx}`);
-      el.addEventListener("click", () => dropDisc(colIdx));
+  const boardEl = renderSJDON([App, state], state.app);
+  const fieldEls = [...boardEl.getElementsByClassName("field")];
+  fieldEls.forEach((fieldEl) => {
+    fieldEl.addEventListener("click", () => {
+      const [_rowIdx, colIdx] = fieldEl.id.split("-").slice(1);
+      dropDisc(parseInt(colIdx));
     });
   });
 
-  const containerEl = renderSJDON(["div", { id: "button-container" }, ""], state.app);
+  const containerEl = renderSJDON(
+    ["div", { id: "button-container" }, ""],
+    state.app,
+  );
   const resetButtonEl = renderSJDON(
     ["button", { id: "reset-button" }, "Reset Game"],
     containerEl,
@@ -68,6 +57,12 @@ const showBoard = () => {
     state = init();
     showBoard();
   });
+
+  const undoButtonEl = renderSJDON(
+    ["button", { id: "undo-button" }, "Undo Move"],
+    containerEl,
+  );
+  undoButtonEl.addEventListener("click", () => undo());
 
   isServerReachable()
     .then(() => {
@@ -105,7 +100,7 @@ const showBoard = () => {
           showBoard();
         }
       });
-    })
+    });
 };
 
 const saveGame = () => {
@@ -152,6 +147,7 @@ const dropDisc = (colIdx) => {
       state.board[rowIdx][colIdx] = state.current;
       const winner = state.current;
       state.current = state.current === "r" ? "b" : "r";
+      state.moves.push({ row: rowIdx, col: colIdx });
 
       showBoard();
 
@@ -179,4 +175,15 @@ async function isServerReachable() {
   } catch (error) {
     throw error;
   }
+}
+
+const undo = () => {
+  if (state.moves.length === 0) {
+    alert("No moves to undo!");
+    return
+  }
+  const lastMove = state.moves.pop();
+  state.board[lastMove.row][lastMove.col] = "";
+  state.current = state.current === "r" ? "b" : "r";
+  showBoard();
 }

@@ -6,6 +6,11 @@ function renderSJDON(element, appRoot) {
   }
 
   const [tag, ...children] = element;
+  if (typeof tag === "function") {
+    const props = children[0] || {};
+    return renderSJDON(tag(props), appRoot);
+  }
+
   let attrs = null;
   const el = document.createElement(tag);
   appRoot.appendChild(el);
