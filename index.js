@@ -23,6 +23,10 @@ CREATE TABLE IF NOT EXISTS data (
 )`);
 })();
 
+app.get("/api/ping", (_req, res) => {
+  res.status(200).end();
+});
+
 app.put("/api/data/save", (req, res) => {
   if (req.query['api-key'] !== apiKey) {
     return res.status(403).json({ message: "Forbidden" });

@@ -63,20 +63,46 @@ const showBoard = () => {
     showBoard();
   });
 
-  const saveButton = elt("button", { id: "save-button" }, "Save to Server");
-  saveButton.addEventListener("click", () => saveGame());
-
-  const loadButton = elt("button", { id: "load-button" }, "Load from Server");
-  loadButton.addEventListener("click", () => loadGame());
-
   const buttonContainer = elt(
     "div",
-    { class: "button-container" },
-    resetButton,
-    saveButton,
-    loadButton,
+    { id: "button-container" },
+    ""
   );
   state.app.appendChild(buttonContainer);
+
+  isServerReachable()
+    .then(() => {
+      saveButton = elt("button", { id: "save-button" }, "Save to Server");
+      saveButton.addEventListener("click", () => saveGame());
+
+      loadButton = elt("button", { id: "load-button" }, "Load from Server");
+      loadButton.addEventListener("click", () => loadGame());
+    })
+    .catch(() => {
+      saveButton = elt("button", { id: "save-button" }, "Save to LocalStorage");
+      saveButton.addEventListener("click", () => {
+        localStorage.setItem("c4game", JSON.stringify(state));
+        alert("Game saved to LocalStorage!");
+      });
+      loadButton = elt(
+        "button",
+        { id: "load-button" },
+        "Load from LocalStorage",
+      );
+      loadButton.addEventListener("click", () => {
+        const savedState = localStorage.getItem("c4game");
+        if (savedState) {
+          state = JSON.parse(savedState);
+          state.app = document.getElementById("app");
+          showBoard();
+        }
+      });
+    })
+    .finally(() => {
+      buttonContainer.appendChild(resetButton);
+      buttonContainer.appendChild(saveButton);
+      buttonContainer.appendChild(loadButton);
+    });
 };
 
 const saveGame = () => {
@@ -137,3 +163,17 @@ const dropDisc = (colIdx) => {
     }
   }
 };
+
+async function isServerReachable() {
+  try {
+    const response = await fetch("/api/ping", {
+      method: "HEAD",
+      cache: "no-store",
+    });
+
+    if (!response.ok) throw new Error("Server error");
+    return true;
+  } catch (error) {
+    throw error;
+  }
+}

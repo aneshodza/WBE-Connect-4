@@ -20,12 +20,15 @@ button {
   border: #333 2px solid;
   border-radius: 10px;
   height: 40px;
-  width: 150px;
+  width: 200px;
 }
 
-.button-container {
+#button-container {
   display: flex;
+  height: 40px;
   gap: 10px;
+  justify-content: center;
+  align-items: center;
 }
 
 .board {
