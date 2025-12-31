@@ -121,8 +121,18 @@ const dropDisc = (colIdx) => {
   for (let rowIdx = state.board.length - 1; rowIdx >= 0; rowIdx--) {
     if (getField(rowIdx, colIdx) === "") {
       state.board[rowIdx][colIdx] = state.current;
+      const winner = state.current;
       state.current = state.current === "r" ? "b" : "r";
+
       showBoard();
+
+      if (connect4Winner(winner, state.board)) {
+        setTimeout(() => {
+          alert(`${winner === "r" ? "Red" : "Blue"} player wins!`);
+          state = init();
+          showBoard();
+        }, 100);
+      }
       return;
     }
   }
